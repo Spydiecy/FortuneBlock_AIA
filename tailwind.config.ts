@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 const config: Config = {
   content: [
@@ -18,11 +18,16 @@ const config: Config = {
       },
       animation: {
         glow: 'glow 1s ease-in-out infinite alternate',
+        pulse: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         glow: {
-          from: { textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 15px #39FF14, 0 0 20px #39FF14, 0 0 35px #39FF14, 0 0 40px #39FF14, 0 0 50px #39FF14, 0 0 75px #39FF14' },
-          to: { textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #39FF14, 0 0 40px #39FF14, 0 0 70px #39FF14, 0 0 80px #39FF14, 0 0 100px #39FF14, 0 0 150px #39FF14' },
+          '0%': { textShadow: '0 0 5px #fff, 0 0 10px #fff, 0 0 15px #39FF14, 0 0 20px #39FF14, 0 0 35px #39FF14, 0 0 40px #39FF14' },
+          '100%': { textShadow: '0 0 10px #fff, 0 0 20px #fff, 0 0 30px #39FF14, 0 0 40px #39FF14, 0 0 70px #39FF14, 0 0 80px #39FF14' },
+        },
+        pulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' },
         },
       },
     },
@@ -30,5 +35,6 @@ const config: Config = {
   plugins: [
     require('@tailwindcss/forms'),
   ],
-};
-export default config;
+}
+
+export default config

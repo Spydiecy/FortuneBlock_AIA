@@ -1,4 +1,4 @@
-export const CONTRACT_ADDRESS = '0x05Bd3F84d7F361904495F0Cc83f24CfAB8fF7918';
+export const CONTRACT_ADDRESS = '0xE07DC7f85A91E07baC27774fbd85bAa7398551a4';
 
 export const CONTRACT_ABI = [
 	{
@@ -51,7 +51,12 @@ export const CONTRACT_ABI = [
 		"inputs": [
 			{
 				"internalType": "uint256",
-				"name": "_duration",
+				"name": "_endTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_entryFee",
 				"type": "uint256"
 			}
 		],
@@ -131,9 +136,28 @@ export const CONTRACT_ABI = [
 				"internalType": "uint256",
 				"name": "endTime",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "entryFee",
+				"type": "uint256"
 			}
 		],
 		"name": "LotteryCreated",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "lotteryId",
+				"type": "uint256"
+			}
+		],
+		"name": "LotteryForceEnded",
 		"type": "event"
 	},
 	{
@@ -159,6 +183,25 @@ export const CONTRACT_ABI = [
 			}
 		],
 		"name": "LotteryRefunded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "lotteryId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "enum FortuneBlock.LotteryStatus",
+				"name": "newStatus",
+				"type": "uint8"
+			}
+		],
+		"name": "LotteryStatusChanged",
 		"type": "event"
 	},
 	{
@@ -291,19 +334,6 @@ export const CONTRACT_ABI = [
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "DAILY_DURATION",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "uint256",
@@ -329,6 +359,11 @@ export const CONTRACT_ABI = [
 				"type": "uint256"
 			},
 			{
+				"internalType": "uint256",
+				"name": "entryFee",
+				"type": "uint256"
+			},
+			{
 				"internalType": "address[]",
 				"name": "participants",
 				"type": "address[]"
@@ -339,9 +374,9 @@ export const CONTRACT_ABI = [
 				"type": "address"
 			},
 			{
-				"internalType": "bool",
-				"name": "ended",
-				"type": "bool"
+				"internalType": "enum FortuneBlock.LotteryStatus",
+				"name": "status",
+				"type": "uint8"
 			}
 		],
 		"stateMutability": "view",
@@ -376,6 +411,11 @@ export const CONTRACT_ABI = [
 				"internalType": "uint256",
 				"name": "totalWinnings",
 				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "totalParticipations",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -407,14 +447,19 @@ export const CONTRACT_ABI = [
 				"type": "uint256"
 			},
 			{
+				"internalType": "uint256",
+				"name": "entryFee",
+				"type": "uint256"
+			},
+			{
 				"internalType": "address",
 				"name": "winner",
 				"type": "address"
 			},
 			{
-				"internalType": "bool",
-				"name": "ended",
-				"type": "bool"
+				"internalType": "enum FortuneBlock.LotteryStatus",
+				"name": "status",
+				"type": "uint8"
 			}
 		],
 		"stateMutability": "view",
@@ -422,7 +467,7 @@ export const CONTRACT_ABI = [
 	},
 	{
 		"inputs": [],
-		"name": "MONTHLY_DURATION",
+		"name": "MIN_PARTICIPANTS",
 		"outputs": [
 			{
 				"internalType": "uint256",
@@ -484,18 +529,10 @@ export const CONTRACT_ABI = [
 				"internalType": "uint256",
 				"name": "totalWinnings",
 				"type": "uint256"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "WEEKLY_DURATION",
-		"outputs": [
+			},
 			{
 				"internalType": "uint256",
-				"name": "",
+				"name": "totalParticipations",
 				"type": "uint256"
 			}
 		],

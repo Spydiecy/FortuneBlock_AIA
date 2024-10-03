@@ -15,6 +15,7 @@ export default function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [username, setUsername] = useState<string>('');
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
 
   useEffect(() => {
     const init = async () => {
@@ -27,8 +28,11 @@ export default function App() {
         const accounts = await provider.send("eth_requestAccounts", []);
         if (accounts.length > 0) {
           setAccount(accounts[0]);
-          const username = await contract.getUserProfile(accounts[0]);
-          setUsername(username);
+          const userProfile = await contract.getUserProfile(accounts[0]);
+          if (userProfile.username) {
+            setUsername(userProfile.username);
+            setIsRegistered(true);
+          }
         }
       }
     };
@@ -43,6 +47,14 @@ export default function App() {
         const signer = provider.getSigner();
         const address = await signer.getAddress();
         setAccount(address);
+
+        if (contract) {
+          const userProfile = await contract.getUserProfile(address);
+          if (userProfile.username) {
+            setUsername(userProfile.username);
+            setIsRegistered(true);
+          }
+        }
       } catch (error) {
         console.error('Failed to connect wallet:', error);
       }
@@ -55,6 +67,7 @@ export default function App() {
         const tx = await contract.registerUsername(newUsername);
         await tx.wait();
         setUsername(newUsername);
+        setIsRegistered(true);
       } catch (error) {
         console.error('Failed to register username:', error);
       }
@@ -62,6 +75,10 @@ export default function App() {
   };
 
   const renderPage = () => {
+    if (!isRegistered && currentPage !== 'home') {
+      return <Home />;
+    }
+
     switch (currentPage) {
       case 'home':
         return <Home />;
@@ -82,8 +99,9 @@ export default function App() {
         connectWallet={connectWallet}
         setCurrentPage={setCurrentPage}
         registerUsername={registerUsername}
+        isRegistered={isRegistered}
       />
-      <main className="container mx-auto p-4">
+      <main className="container mx-auto p-4 pt-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
