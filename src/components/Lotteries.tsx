@@ -21,14 +21,20 @@ interface Lottery {
 const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
   const [lotteries, setLotteries] = useState<Lottery[]>([]);
   const [loading, setLoading] = useState(true);
-  const [depositing, setDepositing] = useState(false);
+  const [depositing, setDepositing] = useState<number | null>(null); // Track depositing state by lottery ID
+  const [participatedLotteries, setParticipatedLotteries] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchLotteries = async () => {
-      if (contract) {
+      if (contract && account) {
         try {
           setLoading(true);
           const fetchedLotteries: Lottery[] = [];
+
+          // Fetch user's participated lotteries
+          const userProfile = await contract.getUserProfile(account);
+          const userParticipatedLotteries = userProfile.participatedLotteries.map((id: ethers.BigNumber) => id.toNumber());
+          setParticipatedLotteries(userParticipatedLotteries);
 
           for (let i = 0; i <= 5; i++) {
             try {
@@ -36,7 +42,7 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
               console.log(`Lottery ${i} details:`, details);
 
               const entryFee = ethers.utils.formatEther(details.entryFee);
-              
+
               // Only add lotteries with non-zero entry fee
               if (parseFloat(entryFee) > 0) {
                 const lottery: Lottery = {
@@ -54,7 +60,6 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
               }
             } catch (error) {
               console.log(`No lottery found for ID ${i} or error fetching:`, error);
-              // If we can't fetch a lottery, we assume it doesn't exist and move on
             }
           }
 
@@ -69,7 +74,7 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
     };
 
     fetchLotteries();
-  }, [contract]);
+  }, [contract, account]);
 
   const handleDeposit = async (lotteryId: number, entryFee: string) => {
     if (!account) {
@@ -79,7 +84,7 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
 
     if (contract) {
       try {
-        setDepositing(true);
+        setDepositing(lotteryId);
         const tx = await contract.deposit(lotteryId, {
           value: ethers.utils.parseEther(entryFee)
         });
@@ -87,20 +92,23 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
         toast.success('Deposit successful!');
         // Refresh lottery after deposit
         const updatedLottery = await contract.getLotteryDetails(lotteryId);
-        setLotteries(prevLotteries => prevLotteries.map(lottery => 
-          lottery.id === lotteryId 
-            ? { 
-                ...lottery, 
-                prizePool: ethers.utils.formatEther(updatedLottery.prizePool),
-                participants: updatedLottery.participants.length
-              }
-            : lottery
-        ));
+        setLotteries(prevLotteries =>
+          prevLotteries.map(lottery =>
+            lottery.id === lotteryId
+              ? {
+                  ...lottery,
+                  prizePool: ethers.utils.formatEther(updatedLottery.prizePool),
+                  participants: updatedLottery.participants.length,
+                }
+              : lottery
+          )
+        );
+        setParticipatedLotteries([...participatedLotteries, lotteryId]); // Mark the lottery as participated
       } catch (error) {
         console.error('Deposit failed:', error);
         toast.error('Deposit failed. Please try again.');
       } finally {
-        setDepositing(false);
+        setDepositing(null);
       }
     }
   };
@@ -116,7 +124,7 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-black text-gray-900 dark:text-white transition-colors duration-300">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <motion.h2 
+        <motion.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -136,52 +144,61 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {lotteries.map((lottery) => (
-              <motion.div
-                key={lottery.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm overflow-hidden shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl"
-              >
-                <div className="px-4 py-5 sm:p-6">
-                  <h3 className="text-xl font-semibold mb-4">Lottery #{lottery.id}</h3>
-                  {[
-                    { icon: Clock, label: 'Ends', value: lottery.endTime.toLocaleString() },
-                    { icon: DollarSign, label: 'Prize Pool', value: `${lottery.prizePool} GAS` },
-                    { icon: Users, label: 'Participants', value: lottery.participants.toString() },
-                    { icon: Tag, label: 'Entry Fee', value: `${lottery.entryFee} GAS` },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center mb-4">
-                      <item.icon className="h-5 w-5 text-emerald-500 mr-2" />
-                      <p className="text-sm">
-                        <span className="font-medium">{item.label}:</span> {item.value}
-                      </p>
+            {lotteries.map((lottery) => {
+              const hasParticipated = participatedLotteries.includes(lottery.id);
+              return (
+                <motion.div
+                  key={lottery.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm overflow-hidden shadow-lg rounded-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl"
+                >
+                  <div className="px-4 py-5 sm:p-6">
+                    <h3 className="text-xl font-semibold mb-4">Lottery #{lottery.id}</h3>
+                    {[
+                      { icon: Clock, label: 'Ends', value: lottery.endTime.toLocaleString() },
+                      { icon: DollarSign, label: 'Prize Pool', value: `${lottery.prizePool} GAS` },
+                      { icon: Users, label: 'Participants', value: lottery.participants.toString() },
+                      { icon: Tag, label: 'Entry Fee', value: `${lottery.entryFee} GAS` },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center mb-4">
+                        <item.icon className="h-5 w-5 text-emerald-500 mr-2" />
+                        <p className="text-sm">
+                          <span className="font-medium">{item.label}:</span> {item.value}
+                        </p>
+                      </div>
+                    ))}
+                    <div className="mt-5">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDeposit(lottery.id, lottery.entryFee)}
+                        disabled={hasParticipated || depositing === lottery.id}
+                        className={`w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                          hasParticipated
+                            ? 'bg-gray-400 cursor-not-allowed opacity-60'
+                            : 'bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700'
+                        } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 ${
+                          depositing === lottery.id ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {depositing === lottery.id ? (
+                          <>
+                            <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                            Depositing...
+                          </>
+                        ) : hasParticipated ? (
+                          'Already Participated'
+                        ) : (
+                          `Deposit ${lottery.entryFee} GAS`
+                        )}
+                      </motion.button>
                     </div>
-                  ))}
-                  <div className="mt-5">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDeposit(lottery.id, lottery.entryFee)}
-                      disabled={depositing}
-                      className={`w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all duration-200 ${
-                        depositing ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      {depositing ? (
-                        <>
-                          <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                          Depositing...
-                        </>
-                      ) : (
-                        `Deposit ${lottery.entryFee} GAS`
-                      )}
-                    </motion.button>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

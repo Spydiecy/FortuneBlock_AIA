@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ethers } from 'ethers';
-import { User, Ticket, Trophy, DollarSign } from 'lucide-react';
+import { User, Ticket, Trophy, DollarSign, Info, Wallet } from 'lucide-react';
 
 interface ProfileProps {
   contract: ethers.Contract | null;
@@ -17,8 +17,20 @@ interface UserProfile {
   totalParticipations: number;
 }
 
+interface LotteryDetails {
+  id: number;
+  endTime: Date;
+  prizePool: string;
+  entryFee: string;
+  participants: number;
+  status: 'InProgress' | 'Ended' | 'Cancelled';
+  winner: string;
+}
+
 const Profile: React.FC<ProfileProps> = ({ contract, account, username }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [lotteryDetails, setLotteryDetails] = useState<LotteryDetails[]>([]);
+  const [balance, setBalance] = useState<string>('0');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +46,28 @@ const Profile: React.FC<ProfileProps> = ({ contract, account, username }) => {
             totalWinnings: ethers.utils.formatEther(profile.totalWinnings),
             totalParticipations: profile.totalParticipations.toNumber()
           });
+
+          // Fetch details for participated lotteries
+          const detailsPromises = profile.participatedLotteries.map(async (id: ethers.BigNumber) => {
+            const details = await contract.getLotteryDetails(id);
+            return {
+              id: id.toNumber(),
+              endTime: new Date(details.endTime.toNumber() * 1000),
+              prizePool: ethers.utils.formatEther(details.prizePool),
+              entryFee: ethers.utils.formatEther(details.entryFee),
+              participants: details.participants.length,
+              status: ['InProgress', 'Ended', 'Cancelled'][details.status],
+              winner: details.winner
+            };
+          });
+          const fetchedDetails = await Promise.all(detailsPromises);
+          setLotteryDetails(fetchedDetails);
+
+          // Fetch MetaMask balance
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const balance = await provider.getBalance(account);
+          setBalance(ethers.utils.formatEther(balance));
+
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
         } finally {
@@ -79,10 +113,10 @@ const Profile: React.FC<ProfileProps> = ({ contract, account, username }) => {
               <dl>
                 {[
                   { label: 'Username', value: userProfile.username, icon: User },
-                  { label: 'Participated Lotteries', value: userProfile.participatedLotteries.join(', ') || 'None', icon: Ticket },
-                  { label: 'Won Lotteries', value: userProfile.wonLotteries.join(', ') || 'None', icon: Trophy },
-                  { label: 'Total Winnings', value: `${userProfile.totalWinnings} GAS`, icon: DollarSign },
+                  { label: 'Wallet Address', value: account, icon: Wallet },
+                  { label: 'Balance', value: `${balance} GAS`, icon: Wallet },
                   { label: 'Total Participations', value: userProfile.totalParticipations.toString(), icon: Ticket },
+                  { label: 'Total Winnings', value: `${userProfile.totalWinnings} GAS`, icon: DollarSign },
                 ].map((item, index) => (
                   <motion.div 
                     key={item.label}
@@ -101,6 +135,54 @@ const Profile: React.FC<ProfileProps> = ({ contract, account, username }) => {
               </dl>
             </div>
           </div>
+
+          {/* Participated Lotteries Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mt-8 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm shadow overflow-hidden sm:rounded-lg border border-gray-200 dark:border-gray-700"
+          >
+            <div className="px-4 py-5 sm:px-6">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Participated Lotteries</h3>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-300">Details of lotteries you've entered.</p>
+            </div>
+            <div className="border-t border-gray-200 dark:border-gray-700">
+              {lotteryDetails.map((lottery, index) => (
+                <div key={lottery.id} className={`${index % 2 === 0 ? 'bg-gray-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'} px-4 py-5 sm:px-6`}>
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white">Lottery #{lottery.id}</h4>
+                  <dl className="mt-2 grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Status</dt>
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-white">{lottery.status}</dd>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">End Time</dt>
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-white">{lottery.endTime.toLocaleString()}</dd>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Prize Pool</dt>
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-white">{lottery.prizePool} GAS</dd>
+                    </div>
+                    <div className="sm:col-span-1">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Entry Fee</dt>
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-white">{lottery.entryFee} GAS</dd>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">Winner</dt>
+                      <dd className="mt-1 text-sm text-gray-900 dark:text-white">
+                        {lottery.status === 'Ended' 
+                          ? (lottery.winner === account 
+                              ? 'You won!' 
+                              : `${lottery.winner}`)
+                          : 'Not yet determined'}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </motion.div>
       </div>
     </div>
