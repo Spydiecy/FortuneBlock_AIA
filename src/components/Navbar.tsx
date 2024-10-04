@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Moon, UserCircle, Wallet, X } from 'lucide-react';
 import { Switch } from '@headlessui/react';
 import { useTheme } from 'next-themes';
+import Image from 'next/image';
+import logo from '../app/favicon.ico'
 
 interface NavbarProps {
   account: string | null;
@@ -44,7 +46,8 @@ const Navbar: React.FC<NavbarProps> = ({
       <nav className="bg-white dark:bg-gradient-to-r dark:from-gray-900 dark:to-black text-gray-900 dark:text-white shadow-lg fixed w-full z-10 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex-shrink-0 flex items-center gap-4">
+              <Image src={logo} alt="FortuneBlock" width={40} height={40} />
               <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 text-transparent bg-clip-text">
                 FortuneBlock
               </span>
