@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ethers } from 'ethers';
-import { User, Ticket, Trophy, DollarSign, Info, Wallet } from 'lucide-react';
+import { User, Ticket, DollarSign, Wallet } from 'lucide-react';
 
 interface ProfileProps {
   contract: ethers.Contract | null;
@@ -27,7 +27,7 @@ interface LotteryDetails {
   winner: string;
 }
 
-const Profile: React.FC<ProfileProps> = ({ contract, account, username }) => {
+const Profile: React.FC<ProfileProps> = ({ contract, account }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [lotteryDetails, setLotteryDetails] = useState<LotteryDetails[]>([]);
   const [balance, setBalance] = useState<string>('0');
@@ -145,7 +145,7 @@ const Profile: React.FC<ProfileProps> = ({ contract, account, username }) => {
           >
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Participated Lotteries</h3>
-              <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-300">Details of lotteries you've entered.</p>
+              <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-300">Details of lotteries you&apos;ve entered.</p>
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700">
               {lotteryDetails.map((lottery, index) => (

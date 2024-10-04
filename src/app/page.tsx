@@ -20,11 +20,11 @@ export default function App() {
   useEffect(() => {
     const init = async () => {
       if (typeof window.ethereum !== 'undefined') {
-        const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         setContract(contract);
-
+  
         const accounts = await provider.send("eth_requestAccounts", []);
         if (accounts.length > 0) {
           setAccount(accounts[0]);
@@ -37,17 +37,17 @@ export default function App() {
       }
     };
     init();
-  }, []);
+  }, []);  
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.providers.Web3Provider(window.ethereum as any);
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const address = await signer.getAddress();
         setAccount(address);
-
+  
         if (contract) {
           const userProfile = await contract.getUserProfile(address);
           if (userProfile.username) {
@@ -59,7 +59,7 @@ export default function App() {
         console.error('Failed to connect wallet:', error);
       }
     }
-  };
+  };  
 
   const registerUsername = async (newUsername: string) => {
     if (contract && account) {
