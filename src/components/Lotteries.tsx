@@ -158,9 +158,9 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
                     <h3 className="text-xl font-semibold mb-4">Lottery #{lottery.id}</h3>
                     {[
                       { icon: Clock, label: 'Ends', value: lottery.endTime.toLocaleString() },
-                      { icon: DollarSign, label: 'Prize Pool', value: `${lottery.prizePool} GAS` },
+                      { icon: DollarSign, label: 'Prize Pool', value: `${lottery.prizePool} AIA` },
                       { icon: Users, label: 'Participants', value: lottery.participants.toString() },
-                      { icon: Tag, label: 'Entry Fee', value: `${lottery.entryFee} GAS` },
+                      { icon: Tag, label: 'Entry Fee', value: `${lottery.entryFee} AIA` },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center mb-4">
                         <item.icon className="h-5 w-5 text-emerald-500 mr-2" />
@@ -191,7 +191,7 @@ const Lotteries: React.FC<LotteriesProps> = ({ contract, account }) => {
                         ) : hasParticipated ? (
                           'Already Participated'
                         ) : (
-                          `Deposit ${lottery.entryFee} GAS`
+                          `Deposit ${lottery.entryFee} AIA`
                         )}
                       </motion.button>
                     </div>

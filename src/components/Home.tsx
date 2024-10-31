@@ -110,7 +110,7 @@ export default function Home() {
               {[
                 { step: 1, description: 'Connect your wallet and register a username' },
                 { step: 2, description: 'Choose an active lottery to participate in' },
-                { step: 3, description: 'Deposit your desired amount of GAS tokens' },
+                { step: 3, description: 'Deposit your desired amount of AIA tokens' },
               ].map(({ step, description }) => (
                 <motion.div
                   key={step}
