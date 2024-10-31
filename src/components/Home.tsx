@@ -13,7 +13,7 @@ const features = [
   { name: 'Fast & Fair', description: 'Instant results with blockchain transparency', icon: Zap },
   { name: 'Secure', description: 'Smart contract powered security', icon: ShieldCheck },
   { name: 'Big Wins', description: 'Larger prize pools with lower fees', icon: DollarSign },
-  { name: 'NeoX Powered', description: 'Leveraging cutting-edge blockchain tech', icon: Cpu },
+  { name: 'AIA Powered', description: 'Leveraging cutting-edge blockchain tech', icon: Cpu },
 ];
 
 const stats = [
@@ -58,7 +58,7 @@ export default function Home() {
             </span>
           </h1>
           <p className="mt-6 mx-auto text-xl max-w-xl text-gray-600 dark:text-gray-300 transition-colors duration-500">
-            Experience the thrill of next-gen blockchain lotteries. Transparent, secure, and lightning-fast on NeoX.
+            Experience the thrill of next-gen blockchain lotteries. Transparent, secure, and lightning-fast on AIA.
           </p>
           <motion.div 
             className="mt-10 flex justify-center"
